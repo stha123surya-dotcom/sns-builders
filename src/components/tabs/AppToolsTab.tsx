@@ -1,10 +1,18 @@
 import { useState, useEffect } from 'react';
 import { SEO } from '../SEO';
-import { Calculator, Ruler, Compass, Hammer, LogIn, LogOut } from 'lucide-react';
+import { Calculator, Ruler, Compass, Hammer, LogIn, LogOut, ArrowLeft } from 'lucide-react';
 import { auth } from '../../firebase';
 import { signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged, User } from 'firebase/auth';
+import { CompassTool } from '../tools/CompassTool';
+import { AreaCalculatorTool } from '../tools/AreaCalculatorTool';
+import { QuickEstimateTool } from '../tools/QuickEstimateTool';
 
-export function AppToolsTab() {
+interface AppToolsTabProps {
+  selectedTool: string | null;
+  setSelectedTool: (tool: string | null) => void;
+}
+
+export function AppToolsTab({ selectedTool, setSelectedTool }: AppToolsTabProps) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -28,16 +36,16 @@ export function AppToolsTab() {
   const handleLogout = async () => {
     try {
       await signOut(auth);
+      setSelectedTool(null);
     } catch (error) {
       console.error("Logout failed:", error);
     }
   };
 
   const tools = [
-    { name: "Material Estimator", icon: Calculator, desc: "Calculate concrete, bricks, and steel requirements." },
-    { name: "Unit Converter", icon: Ruler, desc: "Convert between metric and imperial construction units." },
-    { name: "Area Planner", icon: Compass, desc: "Plan floor areas and plot dimensions easily." },
-    { name: "Project Tracker", icon: Hammer, desc: "Track construction phases and milestones." },
+    { id: "compass", name: "Vastu Digital Compass", icon: Compass, desc: "Check directions and Vastu alignment." },
+    { id: "area", name: "Area Calculator", icon: Ruler, desc: "Calculate total area from length and width." },
+    { id: "estimate", name: "Quick Estimate", icon: Calculator, desc: "Get a rough cost estimate based on rooms and floors." },
   ];
 
   if (loading) {
@@ -65,41 +73,71 @@ export function AppToolsTab() {
     );
   }
 
+  const renderTool = () => {
+    switch (selectedTool) {
+      case 'compass': return <CompassTool />;
+      case 'area': return <AreaCalculatorTool />;
+      case 'estimate': return <QuickEstimateTool />;
+      default: return null;
+    }
+  };
+
   return (
     <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
       <SEO 
-        title="App Tools" 
+        title={selectedTool ? `${tools.find(t => t.id === selectedTool)?.name} | App Tools` : "App Tools"} 
         description="Experience our construction and building tools to help you plan and estimate your projects." 
       />
       
       <div className="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div>
-          <h1 className="text-4xl font-bold mb-4">Experience our Tools</h1>
-          <p className="text-lg text-muted-foreground max-w-2xl">
-            Welcome back, {user.displayName}! We provide a suite of digital tools to help you estimate materials, plan spaces, and track your construction projects efficiently.
-          </p>
+          {selectedTool ? (
+            <button 
+              onClick={() => setSelectedTool(null)}
+              className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors mb-4 font-medium"
+            >
+              <ArrowLeft size={20} /> Back to Tools
+            </button>
+          ) : (
+            <>
+              <h1 className="text-4xl font-bold mb-4">Experience our Tools</h1>
+              <p className="text-lg text-muted-foreground max-w-2xl">
+                Welcome back, {user.displayName}! We provide a suite of digital tools to help you estimate materials, plan spaces, and track your construction projects efficiently.
+              </p>
+            </>
+          )}
         </div>
         <button 
           onClick={handleLogout}
-          className="flex items-center gap-2 px-4 py-2 rounded-lg border border-border hover:bg-muted transition-colors text-sm font-medium"
+          className="flex items-center gap-2 px-4 py-2 rounded-lg border border-border hover:bg-muted transition-colors text-sm font-medium shrink-0"
         >
           <LogOut size={16} /> Sign Out
         </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {tools.map((tool, i) => (
-          <div key={i} className="group bg-surface p-6 rounded-2xl border border-border hover:border-accent transition-colors cursor-pointer flex gap-6 items-start">
-            <div className="w-16 h-16 shrink-0 bg-muted group-hover:bg-accent/10 rounded-2xl flex items-center justify-center text-primary group-hover:text-accent transition-colors">
-              <tool.icon size={32} />
+      {selectedTool ? (
+        <div className="max-w-3xl mx-auto">
+          {renderTool()}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {tools.map((tool) => (
+            <div 
+              key={tool.id} 
+              onClick={() => setSelectedTool(tool.id)}
+              className="group bg-surface p-6 rounded-2xl border border-border hover:border-accent hover:shadow-md transition-all cursor-pointer flex flex-col items-center text-center gap-4"
+            >
+              <div className="w-16 h-16 shrink-0 bg-muted group-hover:bg-accent/10 rounded-2xl flex items-center justify-center text-primary group-hover:text-accent transition-colors">
+                <tool.icon size={32} />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold mb-2 group-hover:text-accent transition-colors">{tool.name}</h3>
+                <p className="text-muted-foreground text-sm">{tool.desc}</p>
+              </div>
             </div>
-            <div>
-              <h3 className="text-xl font-bold mb-2 group-hover:text-accent transition-colors">{tool.name}</h3>
-              <p className="text-muted-foreground">{tool.desc}</p>
-            </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

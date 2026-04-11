@@ -23,9 +23,11 @@ interface SidebarProps {
   setActiveTab: (tab: TabType) => void;
   isMobileMenuOpen: boolean;
   setIsMobileMenuOpen: (isOpen: boolean) => void;
+  selectedTool: string | null;
+  setSelectedTool: (tool: string | null) => void;
 }
 
-export function Sidebar({ activeTab, setActiveTab, isMobileMenuOpen, setIsMobileMenuOpen }: SidebarProps) {
+export function Sidebar({ activeTab, setActiveTab, isMobileMenuOpen, setIsMobileMenuOpen, selectedTool, setSelectedTool }: SidebarProps) {
   const [isToolsOpen, setIsToolsOpen] = useState(false);
 
   const navItems: Array<{
@@ -33,7 +35,7 @@ export function Sidebar({ activeTab, setActiveTab, isMobileMenuOpen, setIsMobile
     label: string;
     icon: any;
     hasDropdown?: boolean;
-    subItems?: Array<{ label: string; icon: any }>;
+    subItems?: Array<{ id: string; label: string; icon: any }>;
   }> = [
     { id: 'webpage', label: 'Webpage', icon: Home },
     { id: 'projects', label: 'Projects', icon: Briefcase },
@@ -43,10 +45,9 @@ export function Sidebar({ activeTab, setActiveTab, isMobileMenuOpen, setIsMobile
       icon: Wrench,
       hasDropdown: true,
       subItems: [
-        { label: 'Material Estimator', icon: Calculator },
-        { label: 'Unit Converter', icon: Ruler },
-        { label: 'Area Planner', icon: Compass },
-        { label: 'Project Tracker', icon: Hammer },
+        { id: 'compass', label: 'Vastu Digital Compass', icon: Compass },
+        { id: 'area', label: 'Area Calculator', icon: Ruler },
+        { id: 'estimate', label: 'Quick Estimate', icon: Calculator },
       ]
     },
     { id: 'blogs', label: 'Blogs', icon: BookOpen },
@@ -58,6 +59,9 @@ export function Sidebar({ activeTab, setActiveTab, isMobileMenuOpen, setIsMobile
     if (hasDropdown) {
       setIsToolsOpen(!isToolsOpen);
       setActiveTab(id as TabType);
+      if (id === 'tools' && !isToolsOpen) {
+        setSelectedTool(null); // Reset tool when opening the dropdown
+      }
     } else {
       setActiveTab(id as TabType);
       setIsMobileMenuOpen(false);
@@ -135,9 +139,15 @@ export function Sidebar({ activeTab, setActiveTab, isMobileMenuOpen, setIsMobile
                         key={idx}
                         onClick={() => {
                           setActiveTab('tools');
+                          setSelectedTool(subItem.id);
                           setIsMobileMenuOpen(false);
                         }}
-                        className="w-full flex items-center gap-3 px-3 py-2 text-sm text-primary-foreground/60 hover:text-accent hover:bg-white/5 rounded-lg transition-colors text-left"
+                        className={cn(
+                          "w-full flex items-center gap-3 px-3 py-2 text-sm rounded-lg transition-colors text-left",
+                          activeTab === 'tools' && selectedTool === subItem.id
+                            ? "text-accent bg-white/10 font-medium"
+                            : "text-primary-foreground/60 hover:text-accent hover:bg-white/5"
+                        )}
                       >
                         <subItem.icon size={14} />
                         {subItem.label}

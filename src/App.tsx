@@ -11,11 +11,12 @@ import { ContactTab } from './components/tabs/ContactTab';
 export default function App() {
   const [activeTab, setActiveTab] = useState<TabType>('webpage');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [selectedTool, setSelectedTool] = useState<string | null>(null);
 
   const renderContent = () => {
     switch (activeTab) {
       case 'webpage': return <WebpageTab />;
-      case 'tools': return <AppToolsTab />;
+      case 'tools': return <AppToolsTab selectedTool={selectedTool} setSelectedTool={setSelectedTool} />;
       case 'projects': return <ProjectsTab />;
       case 'blogs': return <BlogsTab />;
       case 'offers': return <OffersTab />;
@@ -31,6 +32,8 @@ export default function App() {
         setActiveTab={setActiveTab}
         isMobileMenuOpen={isMobileMenuOpen}
         setIsMobileMenuOpen={setIsMobileMenuOpen}
+        selectedTool={selectedTool}
+        setSelectedTool={setSelectedTool}
       />
       
       <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
