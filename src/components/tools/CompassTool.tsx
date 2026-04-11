@@ -11,7 +11,7 @@ export function CompassTool() {
   const [isStarted, setIsStarted] = useState(false);
 
   const startCompass = async () => {
-    if (typeof (DeviceOrientationEvent as any).requestPermission === 'function') {
+    if (typeof DeviceOrientationEvent !== 'undefined' && typeof (DeviceOrientationEvent as any).requestPermission === 'function') {
       try {
         const permissionState = await (DeviceOrientationEvent as any).requestPermission();
         if (permissionState === 'granted') {
@@ -23,10 +23,10 @@ export function CompassTool() {
       } catch (err) {
         setError('Error requesting device orientation permission.');
       }
-    } else if ('ondeviceorientationabsolute' in window) {
+    } else if (typeof window !== 'undefined' && 'ondeviceorientationabsolute' in window) {
       (window as any).addEventListener('deviceorientationabsolute', handleOrientation as any, true);
       setIsStarted(true);
-    } else if ('ondeviceorientation' in window) {
+    } else if (typeof window !== 'undefined' && 'ondeviceorientation' in window) {
       (window as any).addEventListener('deviceorientation', handleOrientation as any, true);
       setIsStarted(true);
     } else {
