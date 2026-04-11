@@ -1,5 +1,5 @@
 import { SEO } from '../SEO';
-import { ArrowRight, Building2, HardHat, Ruler } from 'lucide-react';
+import { ArrowRight, Building2, HardHat, Ruler, Paintbrush } from 'lucide-react';
 
 export function WebpageTab() {
   return (
@@ -28,16 +28,40 @@ export function WebpageTab() {
         </div>
       </section>
 
+      {/* About Us Section */}
+      <section className="mb-12 bg-surface p-8 md:p-12 rounded-3xl border border-border shadow-sm">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+          <div>
+            <h2 className="text-3xl font-bold mb-6">About Us</h2>
+            <p className="text-muted-foreground leading-relaxed mb-4">
+              Shape and Structure Builders is a premier construction company dedicated to transforming visions into reality. With years of experience in the industry, we have built a reputation for excellence, reliability, and innovative design.
+            </p>
+            <p className="text-muted-foreground leading-relaxed">
+              Our team of expert architects, engineers, and builders work collaboratively to deliver projects that not only meet but exceed our clients' expectations. From residential homes to large-scale commercial complexes, we bring the same level of dedication and craftsmanship to every project.
+            </p>
+          </div>
+          <div className="relative h-64 md:h-full min-h-[300px] rounded-2xl overflow-hidden">
+            <img 
+              src="https://picsum.photos/seed/aboutus/800/600" 
+              alt="About Us" 
+              className="absolute inset-0 w-full h-full object-cover" 
+              referrerPolicy="no-referrer" 
+            />
+          </div>
+        </div>
+      </section>
+
       {/* Specialization Section */}
       <section className="mb-12">
         <div className="flex items-center justify-between mb-8">
           <h2 className="text-3xl font-bold">Our Specialization</h2>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {[
             { icon: Building2, title: "Commercial", desc: "Modern office spaces and retail centers built to last." },
             { icon: HardHat, title: "Residential", desc: "Custom homes and renovations tailored to your lifestyle." },
-            { icon: Ruler, title: "Architecture", desc: "Innovative design and structural planning services." }
+            { icon: Ruler, title: "Architecture", desc: "Innovative design and structural planning services." },
+            { icon: Paintbrush, title: "Interior", desc: "Aesthetic and functional interior design solutions." }
           ].map((item, i) => (
             <div key={i} className="bg-surface p-8 rounded-2xl border border-border hover:shadow-lg transition-shadow">
               <div className="w-14 h-14 bg-muted rounded-2xl flex items-center justify-center text-accent mb-6">

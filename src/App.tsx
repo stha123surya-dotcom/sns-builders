@@ -3,6 +3,7 @@ import { Menu } from 'lucide-react';
 import { Sidebar, TabType } from './components/Sidebar';
 import { WebpageTab } from './components/tabs/WebpageTab';
 import { AppToolsTab } from './components/tabs/AppToolsTab';
+import { ProjectsTab } from './components/tabs/ProjectsTab';
 import { BlogsTab } from './components/tabs/BlogsTab';
 import { OffersTab } from './components/tabs/OffersTab';
 import { ContactTab } from './components/tabs/ContactTab';
@@ -15,6 +16,7 @@ export default function App() {
     switch (activeTab) {
       case 'webpage': return <WebpageTab />;
       case 'tools': return <AppToolsTab />;
+      case 'projects': return <ProjectsTab />;
       case 'blogs': return <BlogsTab />;
       case 'offers': return <OffersTab />;
       case 'contact': return <ContactTab />;

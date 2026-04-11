@@ -11,11 +11,12 @@ import {
   Calculator,
   Ruler,
   Compass,
-  Hammer
+  Hammer,
+  Briefcase
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 
-export type TabType = 'webpage' | 'tools' | 'blogs' | 'offers' | 'contact';
+export type TabType = 'webpage' | 'tools' | 'projects' | 'blogs' | 'offers' | 'contact';
 
 interface SidebarProps {
   activeTab: TabType;
@@ -35,6 +36,7 @@ export function Sidebar({ activeTab, setActiveTab, isMobileMenuOpen, setIsMobile
     subItems?: Array<{ label: string; icon: any }>;
   }> = [
     { id: 'webpage', label: 'Webpage', icon: Home },
+    { id: 'projects', label: 'Projects', icon: Briefcase },
     { 
       id: 'tools', 
       label: 'App Tools', 
