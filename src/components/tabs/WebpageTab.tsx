@@ -1,5 +1,5 @@
 import { SEO } from '../SEO';
-import { ArrowRight, Building2, HardHat, Ruler, Paintbrush } from 'lucide-react';
+import { ArrowRight, Building2, HardHat, Ruler, Paintbrush, Compass } from 'lucide-react';
 import { TabType } from '../Sidebar';
 
 interface WebpageTabProps {
@@ -64,19 +64,55 @@ export function WebpageTab({ setActiveTab }: WebpageTabProps) {
         <div className="flex items-center justify-between mb-8">
           <h2 className="text-3xl font-bold">Our Specialization</h2>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {[
-            { icon: Building2, title: "Commercial", desc: "Modern office spaces and retail centers built to last." },
-            { icon: HardHat, title: "Residential", desc: "Custom homes and renovations tailored to your lifestyle." },
-            { icon: Ruler, title: "Architecture", desc: "Innovative design and structural planning services." },
-            { icon: Paintbrush, title: "Interior", desc: "Aesthetic and functional interior design solutions." }
+            { 
+              icon: Ruler, 
+              title: "Building Design", 
+              desc: "Comprehensive architectural blueprints and conceptual designs tailored to your vision.",
+              bgImage: "https://images.unsplash.com/photo-1503387762-592deb58ef4e?q=80&w=800&auto=format&fit=crop"
+            },
+            { 
+              icon: Building2, 
+              title: "Construction", 
+              desc: "End-to-end execution of residential, commercial, and industrial building projects with uncompromising quality.",
+              bgImage: "https://github.com/stha123surya-dotcom/website-practice/blob/main/Images/IMG_20220304_134141.jpg?raw=true"
+            },
+            { 
+              icon: HardHat, 
+              title: "Engineering", 
+              desc: "Robust structural engineering, site assessments, and technical planning for maximum safety and longevity.",
+              bgImage: "https://images.unsplash.com/photo-1581094794329-c8112a89af12?q=80&w=800&auto=format&fit=crop"
+            },
+            { 
+              icon: Paintbrush, 
+              title: "Interior Design", 
+              desc: "Aesthetic, functional, and modern interior transformations that elevate your living and working spaces.",
+              bgImage: "https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?q=80&w=800&auto=format&fit=crop"
+            },
+            { 
+              icon: Compass, 
+              title: "Vastu Consultation", 
+              desc: "Traditional architectural alignment to maximize natural harmony, energy, and prosperity in your environment.",
+              bgImage: "https://images.unsplash.com/photo-1628592102751-ba83b0314276?q=80&w=800&auto=format&fit=crop"
+            }
           ].map((item, i) => (
-            <div key={i} className="bg-surface p-8 rounded-2xl border border-border hover:shadow-lg transition-shadow">
-              <div className="w-14 h-14 bg-muted rounded-2xl flex items-center justify-center text-accent mb-6">
-                <item.icon size={28} />
+            <div key={i} className="relative bg-black group rounded-3xl overflow-hidden border border-border hover:shadow-xl transition-all min-h-[300px] flex flex-col justify-end p-8">
+              <img 
+                src={item.bgImage} 
+                alt={item.title}
+                className="absolute inset-0 w-full h-full object-cover opacity-50 group-hover:opacity-30 transition-all duration-700 group-hover:scale-105"
+                referrerPolicy="no-referrer"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent pointer-events-none transition-colors duration-500" />
+              
+              <div className="relative z-10 text-white">
+                <div className="w-14 h-14 bg-accent/90 backdrop-blur-sm rounded-2xl flex items-center justify-center text-white mb-6 transform group-hover:-translate-y-2 transition-transform duration-500 shadow-lg">
+                  <item.icon size={28} />
+                </div>
+                <h3 className="text-2xl font-bold mb-3">{item.title}</h3>
+                <p className="text-white/80 leading-relaxed font-medium">{item.desc}</p>
               </div>
-              <h3 className="text-xl font-bold mb-3">{item.title}</h3>
-              <p className="text-muted-foreground leading-relaxed">{item.desc}</p>
             </div>
           ))}
         </div>

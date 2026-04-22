@@ -55,6 +55,7 @@ export function ProjectsTab() {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<string | null>(null);
+  const [viewingProject, setViewingProject] = useState<Project | null>(null);
 
   useEffect(() => {
     const unsubscribeAuth = onAuthStateChanged(auth, (currentUser) => {
@@ -348,7 +349,10 @@ export function ProjectsTab() {
                   <button onClick={() => handleDelete(project.id)} className="p-2 text-red-400 hover:text-red-300 hover:bg-red-500/20 rounded-md transition-colors"><Trash2 size={16} /></button>
                 </div>
               )}
-              <div className="relative h-60 overflow-hidden">
+              <div 
+                className="relative h-60 overflow-hidden cursor-pointer"
+                onClick={() => setViewingProject(project)}
+              >
                 <img 
                   src={project.image} 
                   alt={project.title}
@@ -404,6 +408,61 @@ export function ProjectsTab() {
                 Delete
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Full Screen Image Modal */}
+      {viewingProject && (
+        <div 
+          className="fixed inset-0 z-[110] flex flex-col items-center p-4 bg-black/95 backdrop-blur-sm animate-in fade-in duration-200"
+          onClick={() => setViewingProject(null)}
+        >
+          <button 
+            className="absolute top-4 right-4 p-2 text-white/50 hover:text-white hover:bg-white/10 rounded-full transition-colors z-50 fixed"
+            onClick={(e) => {
+              e.stopPropagation();
+              setViewingProject(null);
+            }}
+          >
+            <X size={32} />
+          </button>
+          
+          <div className="flex-1 flex items-center justify-center w-full min-h-0 pt-12 pb-4">
+            <img 
+              src={viewingProject.image} 
+              alt={viewingProject.title} 
+              className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
+              referrerPolicy="no-referrer"
+              onClick={(e) => e.stopPropagation()}
+            />
+          </div>
+
+          <div 
+            className="w-full max-w-4xl bg-surface/10 backdrop-blur-md border border-white/10 rounded-2xl p-6 text-white text-left mt-2 shrink-0 animate-in slide-in-from-bottom-8 duration-500"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
+              <div>
+                <span className="px-3 py-1 bg-accent/80 backdrop-blur-sm text-white text-xs font-bold uppercase tracking-wider rounded-full mb-2 inline-block">
+                  {viewingProject.category}
+                </span>
+                <h3 className="text-2xl font-bold">{viewingProject.title}</h3>
+              </div>
+              <div className="flex flex-col gap-1 text-sm text-white/70">
+                <div className="flex items-center gap-2">
+                  <MapPin size={16} className="text-accent" />
+                  <span>{viewingProject.location}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Calendar size={16} className="text-accent" />
+                  <span>{viewingProject.date}</span>
+                </div>
+              </div>
+            </div>
+            <p className="text-white/80 whitespace-pre-wrap text-sm md:text-base max-h-32 overflow-y-auto custom-scrollbar">
+              <LinkifyText text={viewingProject.description} />
+            </p>
           </div>
         </div>
       )}

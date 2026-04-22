@@ -89,11 +89,6 @@ export default function App() {
           </div>
         </div>
       </main>
-
-      {/* Helper footer for Firebase Domain Authorization */}
-      <div className="fixed bottom-0 right-0 p-2 text-[10px] text-muted-foreground bg-surface/80 backdrop-blur-sm border-t border-l border-border rounded-tl-lg z-50">
-        Current Domain: <span className="font-mono select-all">{window.location.hostname}</span>
-      </div>
     </div>
   );
 }
