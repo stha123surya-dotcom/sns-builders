@@ -28,6 +28,18 @@ service cloud.firestore {
     //   - authorId: string (required, matches uid)
     //   - createdAt: timestamp (required)
     //
+    // Collection: projects
+    // Document ID: auto-generated
+    // Fields:
+    //   - title: string (required, < 200 chars)
+    //   - category: string (required, < 100 chars)
+    //   - location: string (required, < 200 chars)
+    //   - date: string (required, < 100 chars)
+    //   - image: string (required, valid url)
+    //   - description: string (required, < 2000 chars)
+    //   - authorId: string (required, matches uid)
+    //   - createdAt: timestamp (required)
+    //
     // ===============================================================
 
     // ===============================================================
@@ -40,7 +52,7 @@ service cloud.firestore {
 
     function isAdmin() {
       return isAuthenticated() && 
-             request.auth.token.email in ['stha123surya@gmail.com', 'neki123nki@gmail.com', 'info@snsbuilders.com.np'] &&
+             request.auth.token.email in ['nekichipalu@gmail.com', 'stha123surya@gmail.com', 'shapeandstructure@gmail.com'] &&
              request.auth.token.email_verified == true;
     }
 
@@ -88,6 +100,29 @@ service cloud.firestore {
              data.createdAt is timestamp;
     }
 
+    function isValidProject(data) {
+      return hasOnlyAllowedFields(['title', 'category', 'location', 'date', 'image', 'description', 'authorId', 'createdAt']) &&
+             data.title is string && data.title.size() > 0 && data.title.size() <= 200 &&
+             data.category is string && data.category.size() > 0 && data.category.size() <= 100 &&
+             data.location is string && data.location.size() > 0 && data.location.size() <= 200 &&
+             data.date is string && data.date.size() > 0 && data.date.size() <= 100 &&
+             isValidUrl(data.image) &&
+             data.description is string && data.description.size() > 0 && data.description.size() <= 2000 &&
+             data.authorId is string && data.authorId == request.auth.uid &&
+             data.createdAt is timestamp;
+    }
+
+    function isValidOffer(data) {
+      return hasOnlyAllowedFields(['title', 'description', 'features', 'validUntil', 'featured', 'authorId', 'createdAt']) &&
+             data.title is string && data.title.size() > 0 && data.title.size() <= 200 &&
+             data.description is string && data.description.size() > 0 && data.description.size() <= 1000 &&
+             data.features is list && data.features.size() <= 10 &&
+             data.validUntil is string && data.validUntil.size() > 0 && data.validUntil.size() <= 100 &&
+             data.featured is bool &&
+             data.authorId is string && data.authorId == request.auth.uid &&
+             data.createdAt is timestamp;
+    }
+
     // ===============================================================
     // Rules
     // ===============================================================
@@ -107,6 +142,32 @@ service cloud.firestore {
       // Only admins can update or delete blogs
       allow update: if isAdmin() && isValidBlog(request.resource.data) && request.resource.data.createdAt == resource.data.createdAt;
       allow delete: if isAdmin();
+    }
+
+    match /projects/{projectId} {
+      // Anyone can read projects
+      allow read: if true;
+      // Only admins can create projects
+      allow create: if isAdmin() && isValidProject(request.resource.data);
+      // Only admins can update or delete projects
+      allow update: if isAdmin() && isValidProject(request.resource.data) && request.resource.data.createdAt == resource.data.createdAt;
+      allow delete: if isAdmin();
+    }
+
+    match /offers/{offerId} {
+      // Anyone can read offers
+      allow read: if true;
+      // Only admins can create offers
+      allow create: if isAdmin() && isValidOffer(request.resource.data);
+      // Only admins can update or delete offers
+      allow update: if isAdmin() && isValidOffer(request.resource.data) && request.resource.data.createdAt == resource.data.createdAt;
+      allow delete: if isAdmin();
+    }
+
+    match /stats/{statId} {
+      allow read: if true;
+      allow create: if statId == 'visits' && request.resource.data.count is number;
+      allow update: if statId == 'visits' && request.resource.data.count is number && request.resource.data.count > resource.data.count;
     }
     
     // Default deny

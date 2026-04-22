@@ -1,11 +1,28 @@
 import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { SEO } from '../SEO';
-import { Calendar, User, ArrowRight, LogIn, LogOut, Plus, Edit, Trash2, Image as ImageIcon, X, Share2, ArrowLeft } from 'lucide-react';
-import { auth, db, storage } from '../../firebase';
+import { Calendar, User, ArrowRight, Plus, Edit, Trash2, X, Share2, ArrowLeft, LogIn, LogOut } from 'lucide-react';
+import { auth, db } from '../../firebase';
 import { signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 import { collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, query, orderBy, serverTimestamp, Timestamp } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { handleFirestoreError, OperationType } from '../../lib/firestore-errors';
+import { LinkifyText } from '../LinkifyText';
+
+const formatImageUrl = (inputUrl: string) => {
+  if (!inputUrl) return '';
+  let url = inputUrl.trim();
+  // Auto-convert Google Drive share links to direct image links
+  const driveRegex = /drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/;
+  const match = url.match(driveRegex);
+  if (match && match[1]) {
+    return `https://drive.google.com/uc?export=view&id=${match[1]}`;
+  }
+  // Auto-convert Dropbox links
+  if (url.includes('dropbox.com') && url.endsWith('?dl=0')) {
+    return url.replace('?dl=0', '?raw=1');
+  }
+  return url;
+};
 
 interface Blog {
   id: string;
@@ -21,12 +38,14 @@ interface Blog {
 }
 
 export function BlogsTab() {
+  const { blogId } = useParams<{ blogId: string }>();
+  const navigate = useNavigate();
   const [user, setUser] = useState<FirebaseUser | null>(null);
   const [blogs, setBlogs] = useState<Blog[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewingBlog, setViewingBlog] = useState<Blog | null>(null);
   
-  const ADMIN_EMAILS = ['stha123surya@gmail.com', 'neki123nki@gmail.com', 'info@snsbuilders.com.np'];
+  const ADMIN_EMAILS = ['nekichipalu@gmail.com', 'stha123surya@gmail.com', 'shapeandstructure@gmail.com'];
   const isAdmin = user?.email ? ADMIN_EMAILS.includes(user.email) : false;
 
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -38,14 +57,16 @@ export function BlogsTab() {
     category: '',
     image: ''
   });
-  const [imageFile, setImageFile] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<string | null>(null);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const handleShare = async (blog: Blog) => {
+    const shareUrl = `${window.location.origin}/blogs/${blog.id}`;
     const shareData = {
       title: blog.title,
       text: blog.excerpt,
-      url: window.location.href,
+      url: shareUrl,
     };
     if (navigator.share) {
       try {
@@ -54,8 +75,9 @@ export function BlogsTab() {
         console.error('Error sharing:', err);
       }
     } else {
-      navigator.clipboard.writeText(`${blog.title}\n${window.location.href}`);
-      alert('Link copied to clipboard!');
+      navigator.clipboard.writeText(`${blog.title}\n${shareUrl}`);
+      setCopiedId(blog.id);
+      setTimeout(() => setCopiedId(null), 2000);
     }
   };
 
@@ -92,12 +114,33 @@ export function BlogsTab() {
     };
   }, []);
 
+  // Update viewingBlog when URL or blogs load
+  useEffect(() => {
+    if (blogId && blogs.length > 0) {
+      const targetBlog = blogs.find(b => b.id === blogId);
+      if (targetBlog) {
+        setViewingBlog(targetBlog);
+      } else {
+        setViewingBlog(null);
+        navigate('/blogs', { replace: true });
+      }
+    } else if (!blogId) {
+      setViewingBlog(null);
+    }
+  }, [blogId, blogs, navigate]);
+
   const handleLogin = async () => {
     try {
       const provider = new GoogleAuthProvider();
       await signInWithPopup(auth, provider);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Login failed:", error);
+      if (error.code === 'auth/unauthorized-domain' || error.message?.includes('unauthorized-domain')) {
+        const domain = window.location.hostname;
+        alert(`ACTION REQUIRED: Unauthorized Domain\n\nFirebase is blocking the login because this exact URL is not authorized yet.\n\nPlease copy this exact text:\n${domain}\n\nAnd add it to Firebase Console -> Authentication -> Settings -> Authorized Domains.`);
+      } else {
+        alert(`Login failed: ${error.message}`);
+      }
     }
   };
 
@@ -109,12 +152,6 @@ export function BlogsTab() {
     }
   };
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setImageFile(e.target.files[0]);
-    }
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
@@ -122,12 +159,6 @@ export function BlogsTab() {
 
     try {
       let imageUrl = formData.image;
-
-      if (imageFile) {
-        const storageRef = ref(storage, `blog_images/${Date.now()}_${imageFile.name}`);
-        await uploadBytes(storageRef, imageFile);
-        imageUrl = await getDownloadURL(storageRef);
-      }
 
       if (!imageUrl) {
         imageUrl = "https://picsum.photos/seed/construction/800/600"; // Fallback image
@@ -160,7 +191,6 @@ export function BlogsTab() {
       setIsFormOpen(false);
       setEditingId(null);
       setFormData({ title: '', excerpt: '', content: '', category: '', image: '' });
-      setImageFile(null);
     } catch (error) {
       handleFirestoreError(error, editingId ? OperationType.UPDATE : OperationType.CREATE, 'blogs');
     } finally {
@@ -180,14 +210,18 @@ export function BlogsTab() {
     setIsFormOpen(true);
   };
 
-  const handleDelete = async (id: string) => {
-    if (window.confirm("Are you sure you want to delete this blog post?")) {
-      try {
-        await deleteDoc(doc(db, 'blogs', id));
-      } catch (error) {
-        handleFirestoreError(error, OperationType.DELETE, `blogs/${id}`);
-      }
+  const confirmDelete = async (id: string) => {
+    try {
+      await deleteDoc(doc(db, 'blogs', id));
+      setItemToDelete(null);
+    } catch (error) {
+      handleFirestoreError(error, OperationType.DELETE, `blogs/${id}`);
+      setItemToDelete(null);
     }
+  };
+
+  const handleDelete = (id: string) => {
+    setItemToDelete(id);
   };
 
   if (loading) {
@@ -202,7 +236,7 @@ export function BlogsTab() {
           description={viewingBlog.excerpt} 
         />
         <button 
-          onClick={() => setViewingBlog(null)}
+          onClick={() => navigate('/blogs')}
           className="mb-6 flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors font-medium"
         >
           <ArrowLeft size={16} /> Back to Blogs
@@ -236,13 +270,13 @@ export function BlogsTab() {
                   onClick={() => handleShare(viewingBlog)}
                   className="flex items-center gap-2 px-4 py-2 bg-muted hover:bg-muted/80 text-primary rounded-lg font-medium transition-colors"
                 >
-                  <Share2 size={18} /> Share
+                  <Share2 size={18} /> {copiedId === viewingBlog.id ? 'Copied!' : 'Share'}
                 </button>
                 {isAdmin && (
                   <>
                     <button 
                       onClick={() => {
-                        setViewingBlog(null);
+                        navigate('/blogs');
                         handleEdit(viewingBlog);
                       }} 
                       className="p-2 text-muted-foreground hover:text-primary hover:bg-muted rounded-md transition-colors"
@@ -252,7 +286,7 @@ export function BlogsTab() {
                     <button 
                       onClick={() => {
                         handleDelete(viewingBlog.id);
-                        setViewingBlog(null);
+                        navigate('/blogs');
                       }} 
                       className="p-2 text-red-500 hover:bg-red-50 rounded-md transition-colors"
                     >
@@ -264,7 +298,7 @@ export function BlogsTab() {
             </div>
             
             <div className="prose prose-lg max-w-none text-muted-foreground whitespace-pre-wrap">
-              {viewingBlog.content}
+              <LinkifyText text={viewingBlog.content} />
             </div>
           </div>
         </article>
@@ -372,17 +406,30 @@ export function BlogsTab() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-semibold mb-1">Featured Image</label>
-                <div className="flex items-center gap-4">
-                  <label className="cursor-pointer flex items-center gap-2 px-4 py-2 bg-muted rounded-xl hover:bg-muted/80 transition-colors border border-border">
-                    <ImageIcon size={18} />
-                    <span className="text-sm font-medium">{imageFile ? imageFile.name : 'Upload Image'}</span>
-                    <input type="file" accept="image/*" className="hidden" onChange={handleImageChange} />
-                  </label>
-                  {!imageFile && formData.image && (
-                    <img src={formData.image} alt="Preview" className="h-10 w-10 object-cover rounded-lg" />
-                  )}
-                </div>
+                <label className="block text-sm font-semibold mb-1">Image URL (Google Drive, Dropbox, etc.)</label>
+                <input 
+                  type="url" 
+                  placeholder="Paste share link here..."
+                  value={formData.image} 
+                  onChange={e => setFormData({...formData, image: formatImageUrl(e.target.value)})}
+                  className="w-full px-4 py-2 rounded-xl border border-border bg-muted/50 focus:bg-surface focus:border-accent outline-none"
+                />
+                {formData.image && (
+                  <div className="mt-2">
+                    <p className="text-xs text-muted-foreground mb-1">Preview:</p>
+                    <div className="relative h-32 w-48 rounded-lg border border-border overflow-hidden bg-muted flex items-center justify-center">
+                      <img 
+                        src={formData.image} 
+                        alt="Preview" 
+                        className="h-full w-full object-cover" 
+                        referrerPolicy="no-referrer"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = 'https://placehold.co/400x300?text=Invalid+Image+Link';
+                        }} 
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
               <div className="pt-4 flex justify-end gap-4">
                 <button 
@@ -423,13 +470,13 @@ export function BlogsTab() {
                 {blogs[0].category}
               </span>
               <h2 
-                onClick={() => setViewingBlog(blogs[0])}
+                onClick={() => navigate('/blogs/' + blogs[0].id)}
                 className="text-3xl md:text-4xl font-bold text-white mb-4 group-hover:underline decoration-accent underline-offset-4 cursor-pointer"
               >
                 {blogs[0].title}
               </h2>
               <p className="text-white/80 line-clamp-2 mb-6 text-lg">
-                {blogs[0].excerpt}
+                <LinkifyText text={blogs[0].excerpt} />
               </p>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-6 text-white/60 text-sm">
@@ -439,10 +486,10 @@ export function BlogsTab() {
                 <div className="flex items-center gap-2">
                   <button 
                     onClick={() => handleShare(blogs[0])}
-                    className="p-2 text-white/80 hover:text-white hover:bg-white/20 rounded-md transition-colors"
+                    className="p-2 text-white/80 hover:text-white hover:bg-white/20 rounded-md transition-colors flex items-center gap-2"
                     title="Share"
                   >
-                    <Share2 size={16} />
+                    <Share2 size={16} /> {copiedId === blogs[0].id && <span className="text-xs">Copied!</span>}
                   </button>
                   {isAdmin && (
                     <div className="flex items-center gap-2 bg-black/50 backdrop-blur-sm p-2 rounded-lg mr-2">
@@ -451,7 +498,7 @@ export function BlogsTab() {
                     </div>
                   )}
                   <button 
-                    onClick={() => setViewingBlog(blogs[0])}
+                    onClick={() => navigate('/blogs/' + blogs[0].id)}
                     className="px-4 py-2 bg-accent text-white rounded-lg text-sm font-bold hover:bg-accent/90 transition-colors"
                   >
                     Read Full Post
@@ -466,7 +513,7 @@ export function BlogsTab() {
             <article key={blog.id} className="group bg-surface rounded-3xl overflow-hidden border border-border hover:shadow-xl transition-all duration-300 flex flex-col">
               <div 
                 className="relative h-64 overflow-hidden cursor-pointer"
-                onClick={() => setViewingBlog(blog)}
+                onClick={() => navigate('/blogs/' + blog.id)}
               >
                 <img 
                   src={blog.image} 
@@ -483,12 +530,12 @@ export function BlogsTab() {
               <div className="p-8 flex flex-col flex-grow">
                 <h3 
                   className="text-2xl font-bold mb-3 group-hover:text-accent transition-colors cursor-pointer"
-                  onClick={() => setViewingBlog(blog)}
+                  onClick={() => navigate('/blogs/' + blog.id)}
                 >
                   {blog.title}
                 </h3>
                 <p className="text-muted-foreground mb-6 flex-grow">
-                  {blog.excerpt}
+                  <LinkifyText text={blog.excerpt} />
                 </p>
                 <div className="flex items-center justify-between pt-6 border-t border-border">
                   <div className="flex items-center gap-4 text-muted-foreground text-sm">
@@ -498,7 +545,7 @@ export function BlogsTab() {
                       className="hover:text-primary transition-colors flex items-center gap-1"
                       title="Share"
                     >
-                      <Share2 size={14} /> Share
+                      <Share2 size={14} /> {copiedId === blog.id ? 'Copied!' : 'Share'}
                     </button>
                   </div>
                   <div className="flex items-center gap-2">
@@ -509,7 +556,7 @@ export function BlogsTab() {
                       </>
                     )}
                     <span 
-                      onClick={() => setViewingBlog(blog)}
+                      onClick={() => navigate('/blogs/' + blog.id)}
                       className="text-accent font-semibold flex items-center gap-1 group-hover:gap-2 transition-all cursor-pointer ml-2"
                     >
                       Read More <ArrowRight size={16} />
@@ -519,6 +566,30 @@ export function BlogsTab() {
               </div>
             </article>
           ))}
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {itemToDelete && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+          <div className="bg-surface w-full max-w-md rounded-3xl p-6 md:p-8 relative shadow-xl border border-border">
+            <h3 className="text-2xl font-bold mb-4">Confirm Deletion</h3>
+            <p className="text-muted-foreground mb-8">Are you sure you want to delete this blog post? This action cannot be undone.</p>
+            <div className="flex justify-end gap-4">
+              <button 
+                onClick={() => setItemToDelete(null)}
+                className="px-6 py-2 rounded-xl font-medium hover:bg-muted transition-colors"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={() => confirmDelete(itemToDelete)}
+                className="px-6 py-2 bg-red-500 text-white rounded-xl font-medium hover:bg-red-600 transition-colors"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
