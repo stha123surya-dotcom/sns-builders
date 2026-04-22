@@ -2,6 +2,44 @@ import { SEO } from '../SEO';
 import { ArrowRight, Building2, HardHat, Ruler, Paintbrush, Compass } from 'lucide-react';
 import { TabType } from '../Sidebar';
 
+const TESTIMONIALS = [
+  {
+    name: "Ravindra Shrestha",
+    location: "Hetauda",
+    project: "Residential Building Design",
+    message: "Shape and Structure Builders transformed our vision into reality. Their attention to detail in our residential building design was just exceptional. Highly recommended!",
+    bgImage: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    name: "Dilmaya Shrestha",
+    location: "Birgunj",
+    project: "Residential Building",
+    message: "We are absolutely thrilled with our new home. The construction quality is top-notch and the team was incredibly professional throughout the entire process.",
+    bgImage: "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    name: "Gyaneshwori Shrestha",
+    location: "",
+    project: "Interior Design and Construction",
+    message: "The interior design and construction exceeded our expectations. They perfectly balanced aesthetics with functionality to create our dream space.",
+    bgImage: "https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    name: "Manoj Sah",
+    location: "Rautahat",
+    project: "Residential design and Interior",
+    message: "A truly seamless experience from design to interior finishing. They perfectly understood our requirements and delivered a beautifully crafted home.",
+    bgImage: "https://images.unsplash.com/photo-1600607687930-cebc5a7df222?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    name: "Susma Mishra",
+    location: "Lalitpur",
+    project: "Residential design and Interior",
+    message: "Outstanding residential design and interior work! The team was highly responsive, brought innovative ideas, and executed everything flawlessly.",
+    bgImage: "https://images.unsplash.com/photo-1600566753086-00f18efc2291?q=80&w=800&auto=format&fit=crop"
+  }
+];
+
 interface WebpageTabProps {
   setActiveTab: (tab: TabType) => void;
 }
@@ -115,6 +153,56 @@ export function WebpageTab({ setActiveTab }: WebpageTabProps) {
               </div>
             </div>
           ))}
+        </div>
+      </section>
+
+      {/* Testimonials Section */}
+      <section className="mb-12 overflow-hidden bg-surface py-12 rounded-3xl border border-border shadow-sm">
+        <div className="px-8 md:px-12 mb-10">
+          <h2 className="text-3xl font-bold">Client Testimonials</h2>
+        </div>
+        
+        <div className="relative flex overflow-hidden w-full group cursor-grab active:cursor-grabbing pb-4">
+          <div className="flex w-max animate-scroll-left hover:[animation-play-state:paused]">
+            {/* First set of testimonials */}
+            <div className="flex gap-6 px-3">
+              {TESTIMONIALS.map((t, i) => (
+                <div key={`orig-${i}`} className="relative w-[350px] md:w-[450px] h-[320px] rounded-3xl overflow-hidden shrink-0 group/card shadow-lg border border-border">
+                  <img src={t.bgImage} alt={t.project} className="absolute inset-0 w-full h-full object-cover transform group-hover/card:scale-105 transition-transform duration-700" referrerPolicy="no-referrer" />
+                  <div className="absolute inset-0 bg-black/60 group-hover/card:bg-black/70 transition-colors duration-500" />
+                  <div className="absolute inset-0 p-8 flex flex-col justify-between text-white">
+                    <div className="text-lg md:text-xl italic text-white/90 leading-relaxed font-medium">
+                      "{t.message}"
+                    </div>
+                    <div>
+                      <div className="w-12 h-1 bg-accent mb-4 rounded-full shadow-sm"></div>
+                      <h4 className="font-bold text-xl drop-shadow-sm">{t.name} {t.location ? <span className="text-white/80 font-medium">({t.location})</span> : ''}</h4>
+                      <p className="text-sm font-bold text-accent mt-1 tracking-wide uppercase drop-shadow-sm">{t.project}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            {/* Duplicate set for perfectly seamless scroll loop */}
+            <div className="flex gap-6 px-3">
+              {TESTIMONIALS.map((t, i) => (
+                <div key={`dup-${i}`} className="relative w-[350px] md:w-[450px] h-[320px] rounded-3xl overflow-hidden shrink-0 group/card shadow-lg border border-border">
+                  <img src={t.bgImage} alt={t.project} className="absolute inset-0 w-full h-full object-cover transform group-hover/card:scale-105 transition-transform duration-700" referrerPolicy="no-referrer" />
+                  <div className="absolute inset-0 bg-black/60 group-hover/card:bg-black/70 transition-colors duration-500" />
+                  <div className="absolute inset-0 p-8 flex flex-col justify-between text-white">
+                    <div className="text-lg md:text-xl italic text-white/90 leading-relaxed font-medium">
+                      "{t.message}"
+                    </div>
+                    <div>
+                      <div className="w-12 h-1 bg-accent mb-4 rounded-full shadow-sm"></div>
+                      <h4 className="font-bold text-xl drop-shadow-sm">{t.name} {t.location ? <span className="text-white/80 font-medium">({t.location})</span> : ''}</h4>
+                      <p className="text-sm font-bold text-accent mt-1 tracking-wide uppercase drop-shadow-sm">{t.project}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </section>
     </div>
