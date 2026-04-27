@@ -1,6 +1,7 @@
 import { SEO } from '../SEO';
 import { ArrowRight, Building2, HardHat, Ruler, Paintbrush, Compass } from 'lucide-react';
 import { TabType } from '../Sidebar';
+import { AdSenseBanner } from '../AdSenseBanner';
 
 const TESTIMONIALS = [
   {
@@ -204,6 +205,11 @@ export function WebpageTab({ setActiveTab }: WebpageTabProps) {
             </div>
           </div>
         </div>
+      </section>
+
+      {/* Embedded AdSense Area */}
+      <section className="mb-12">
+        <AdSenseBanner className="w-full h-[120px] md:h-[90px]" />
       </section>
     </div>
   );

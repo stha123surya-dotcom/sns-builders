@@ -120,18 +120,20 @@ export function Sidebar({ activeTab, setActiveTab, isMobileMenuOpen, setIsMobile
         {/* Logo Area */}
         <div className="p-6 flex items-center justify-between border-b border-white/10">
           <div className="flex items-center gap-3">
-            <img 
-              src="https://drive.google.com/uc?export=view&id=1HjURU1VvNpc2zSYNwzumvz9vg8nTaU0P" 
-              alt="Shape & Structure Builders Logo" 
-              className="h-12 w-auto object-contain drop-shadow-md transition-transform hover:scale-105 duration-300"
-              onError={(e) => {
-                // Fallback if image is not yet uploaded
-                (e.target as HTMLImageElement).style.display = 'none';
-                (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
-              }}
-            />
-            <div className="hidden w-10 h-10 bg-accent rounded-lg flex items-center justify-center font-bold text-xl shadow-md">
-              S&S
+            <div className="bg-white p-1.5 rounded-xl shadow-md border border-white/20">
+              <img 
+                src="https://github.com/stha123surya-dotcom/website-practice/blob/main/Images/logo.png?raw=true" 
+                alt="Shape & Structure Builders Logo" 
+                className="h-10 w-auto object-contain drop-shadow-sm transition-transform hover:scale-105 duration-300"
+                onError={(e) => {
+                  // Fallback if image is not yet uploaded
+                  (e.target as HTMLImageElement).style.display = 'none';
+                  (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
+                }}
+              />
+              <div className="hidden w-10 h-10 bg-accent rounded-lg flex items-center justify-center font-bold text-xl shadow-md text-white">
+                S&S
+              </div>
             </div>
             <div>
               <h2 className="font-bold text-lg leading-tight tracking-wide">Shape & Structure</h2>
@@ -226,6 +228,12 @@ export function Sidebar({ activeTab, setActiveTab, isMobileMenuOpen, setIsMobile
                 {visitCount !== null ? visitCount.toLocaleString() : '...'}
               </p>
             </div>
+          </div>
+
+          <div className="mt-2 text-center">
+            <p className="text-[10px] text-primary-foreground/40 leading-snug">
+              All right reserved at Shape and Structure Builders Pvt. Ltd, 2026.
+            </p>
           </div>
         </div>
       </aside>
