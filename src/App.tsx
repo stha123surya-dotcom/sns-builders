@@ -51,17 +51,19 @@ export default function App() {
         {/* Mobile Header */}
         <header className="lg:hidden flex items-center justify-between p-4 bg-primary text-primary-foreground sticky top-0 z-30 shadow-md">
           <div className="flex items-center gap-2">
-            <img 
-              src="https://drive.google.com/uc?export=view&id=1HjURU1VvNpc2zSYNwzumvz9vg8nTaU0P" 
-              alt="Logo" 
-              className="h-8 w-auto object-contain drop-shadow-sm"
-              onError={(e) => {
-                (e.target as HTMLImageElement).style.display = 'none';
-                (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
-              }}
-            />
-            <div className="hidden w-8 h-8 bg-accent rounded-md flex items-center justify-center font-bold text-sm shadow-sm">
-              S&S
+            <div className="bg-white p-1 rounded-lg">
+              <img 
+                src="https://github.com/stha123surya-dotcom/website-practice/blob/main/Images/logo.png?raw=true" 
+                alt="Logo" 
+                className="h-7 w-auto object-contain drop-shadow-sm"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).style.display = 'none';
+                  (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
+                }}
+              />
+              <div className="hidden w-7 h-7 bg-accent rounded-md flex items-center justify-center font-bold text-xs shadow-sm text-white">
+                S&S
+              </div>
             </div>
             <span className="font-bold tracking-wide">Shape & Structure</span>
           </div>
