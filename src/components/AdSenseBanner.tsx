@@ -18,14 +18,51 @@ export function AdSenseBanner({
   const adRef = useRef<HTMLModElement>(null);
 
   useEffect(() => {
-    try {
-      if (adRef.current && !adRef.current.hasChildNodes()) {
-        const win = window as any;
-        (win.adsbygoogle = win.adsbygoogle || []).push({});
+    let timeoutId: ReturnType<typeof setTimeout>;
+    let observer: ResizeObserver | null = null;
+    let adPushed = false;
+    
+    const pushAd = () => {
+      try {
+        if (!adPushed && adRef.current && !adRef.current.getAttribute('data-adsbygoogle-status')) {
+          // Verify actual width
+          const width = adRef.current.offsetWidth || adRef.current.parentElement?.offsetWidth || 0;
+          if (width > 0) {
+            adPushed = true;
+            const win = window as any;
+            (win.adsbygoogle = win.adsbygoogle || []).push({});
+            if (observer) {
+              observer.disconnect();
+            }
+          }
+        }
+      } catch (e) {
+        // Ignoring specific known AdSense errors which are benign in dev/SPA environments
+        if (e instanceof Error && !e.message.includes('already have ads')) {
+          console.error("AdSense error:", e);
+        }
       }
-    } catch (e) {
-      console.error("AdSense error:", e);
+    };
+
+    if (adRef.current && adRef.current.parentElement) {
+       // Only push if the container has an actual width to prevent 'No slot size for availableWidth=0'
+       const parent = adRef.current.parentElement;
+       if (parent.offsetWidth > 0) {
+         timeoutId = setTimeout(pushAd, 300);
+       } else {
+         observer = new ResizeObserver(() => {
+           if (parent.offsetWidth > 0 && !adPushed) {
+             timeoutId = setTimeout(pushAd, 300);
+           }
+         });
+         observer.observe(parent);
+       }
     }
+
+    return () => {
+      clearTimeout(timeoutId);
+      if (observer) observer.disconnect();
+    };
   }, []);
 
   return (
