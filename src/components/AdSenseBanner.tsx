@@ -11,7 +11,7 @@ interface AdSenseBannerProps {
 export function AdSenseBanner({ 
   className = "", 
   client = "ca-pub-4769306486288330", 
-  slot = "1234567890", // Provide a default/placeholder Ad slot ID
+  slot = "3125630476", // Updated with user's Ad slot ID
   format = "auto",
   responsive = true
 }: AdSenseBannerProps) {
