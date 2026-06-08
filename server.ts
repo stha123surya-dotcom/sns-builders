@@ -6,17 +6,23 @@ async function startServer() {
   const app = express();
   const PORT = 3000;
 
+  // Trust the proxy since the app runs behind Cloud Run's load balancer
+  app.set('trust proxy', 1);
+
   // Add requested security headers
   app.use(helmet({
     contentSecurityPolicy: false, // We'll set this manually to be safe with Firebase and AdSense
+    strictTransportSecurity: {
+      maxAge: 31536000,
+      includeSubDomains: true,
+      preload: true
+    },
+    xFrameOptions: { action: "sameorigin" },
+    referrerPolicy: { policy: "strict-origin-when-cross-origin" }
   }));
 
   // Manual headers
   app.use((req, res, next) => {
-    res.setHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload");
-    res.setHeader("X-Frame-Options", "SAMEORIGIN");
-    res.setHeader("X-Content-Type-Options", "nosniff");
-    res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
     res.setHeader("Permissions-Policy", "geolocation=(), microphone=(), camera=()");
     // Setting CSP manually to allow external scripts used by the app (Firebase, AdSense, etc)
     res.setHeader(
@@ -30,7 +36,7 @@ async function startServer() {
   if (process.env.NODE_ENV !== "production") {
     const { createServer: createViteServer } = await import("vite");
     const vite = await createViteServer({
-      server: { middlewareMode: true },
+      server: { middlewareMode: true, hmr: false },
       appType: "spa",
     });
     app.use(vite.middlewares);
