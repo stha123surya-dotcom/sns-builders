@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://snsbuilders.com.np/sitemap.xml
