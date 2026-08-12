@@ -20,40 +20,63 @@ export function ContactTab() {
     e.preventDefault();
     setIsSubmitting(true);
     
+    let dbSuccess = false;
+    let emailSuccess = false;
+
+    // 1. Save to Firebase Database
     try {
-      // 1. Save to Firebase Database (as a backup)
       await addDoc(collection(db, 'contact_submissions'), {
-        ...formData,
+        firstName: formData.firstName.trim(),
+        lastName: formData.lastName.trim(),
+        email: formData.email.trim(),
+        subject: formData.subject.trim(),
+        message: formData.message.trim(),
         createdAt: serverTimestamp()
       });
+      dbSuccess = true;
+    } catch (error) {
+      console.error("Firestore contact submission error:", error);
+      // Log firestore error if permission/security error occurs
+      try {
+        handleFirestoreError(error, OperationType.CREATE, 'contact_submissions');
+      } catch (fErr) {
+        // Continue to try sending email even if DB submission failed
+      }
+    }
 
-      // 2. Send Email directly to your inbox via FormSubmit
-      // Note: The first time this runs, you will receive an activation email from FormSubmit.
-      // You MUST click "Activate" in that email for future messages to come through.
-      await fetch("https://formsubmit.co/ajax/stha123surya@gmail.com", {
+    // 2. Send Email directly to inbox via FormSubmit
+    try {
+      const response = await fetch("https://formsubmit.co/ajax/stha123surya@gmail.com", {
         method: "POST",
         headers: { 
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
         },
         body: JSON.stringify({
-            name: `${formData.firstName} ${formData.lastName}`,
-            email: formData.email,
-            subject: formData.subject,
-            message: formData.message,
-            _subject: `New Website Inquiry: ${formData.subject}`, // Email subject line
-            _template: "table" // Formats the email nicely
+          name: `${formData.firstName} ${formData.lastName}`,
+          email: formData.email,
+          subject: formData.subject,
+          message: formData.message,
+          _subject: `New Website Inquiry: ${formData.subject}`,
+          _template: "table"
         })
       });
+      if (response.ok) {
+        emailSuccess = true;
+      }
+    } catch (emailErr) {
+      console.warn("FormSubmit email error:", emailErr);
+    }
 
+    if (dbSuccess || emailSuccess) {
       setIsSuccess(true);
       setFormData({ firstName: '', lastName: '', email: '', subject: '', message: '' });
       setTimeout(() => setIsSuccess(false), 5000);
-    } catch (error) {
-      handleFirestoreError(error, OperationType.CREATE, 'contact_submissions');
-    } finally {
-      setIsSubmitting(false);
+    } else {
+      alert("There was an issue sending your message. Please try again or reach out via phone/email directly.");
     }
+
+    setIsSubmitting(false);
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
