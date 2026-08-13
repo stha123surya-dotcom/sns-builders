@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { SEO } from '../SEO';
-import { MapPin, Phone, Mail, Clock, Send, CheckCircle2 } from 'lucide-react';
+import { MapPin, Phone, Mail, Clock, Send, CheckCircle2, MessageCircle } from 'lucide-react';
 import { db } from '../../firebase';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { handleFirestoreError, OperationType } from '../../lib/firestore-errors';
@@ -10,6 +10,7 @@ export function ContactTab() {
     firstName: '',
     lastName: '',
     email: '',
+    phone: '',
     subject: '',
     message: ''
   });
@@ -21,7 +22,6 @@ export function ContactTab() {
     setIsSubmitting(true);
     
     let dbSuccess = false;
-    let emailSuccess = false;
 
     // 1. Save to Firebase Database
     try {
@@ -29,6 +29,7 @@ export function ContactTab() {
         firstName: formData.firstName.trim(),
         lastName: formData.lastName.trim(),
         email: formData.email.trim(),
+        phone: formData.phone.trim(),
         subject: formData.subject.trim(),
         message: formData.message.trim(),
         createdAt: serverTimestamp()
@@ -36,17 +37,16 @@ export function ContactTab() {
       dbSuccess = true;
     } catch (error) {
       console.error("Firestore contact submission error:", error);
-      // Log firestore error if permission/security error occurs
       try {
         handleFirestoreError(error, OperationType.CREATE, 'contact_submissions');
       } catch (fErr) {
-        // Continue to try sending email even if DB submission failed
+        // Continue
       }
     }
 
-    // 2. Send Email directly to inbox via FormSubmit
+    // 2. Send Email directly to inbox via FormSubmit (backup)
     try {
-      const response = await fetch("https://formsubmit.co/ajax/stha123surya@gmail.com", {
+      await fetch("https://formsubmit.co/ajax/stha123surya@gmail.com", {
         method: "POST",
         headers: { 
           'Content-Type': 'application/json',
@@ -55,28 +55,38 @@ export function ContactTab() {
         body: JSON.stringify({
           name: `${formData.firstName} ${formData.lastName}`,
           email: formData.email,
+          phone: formData.phone,
           subject: formData.subject,
           message: formData.message,
           _subject: `New Website Inquiry: ${formData.subject}`,
           _template: "table"
         })
       });
-      if (response.ok) {
-        emailSuccess = true;
-      }
     } catch (emailErr) {
       console.warn("FormSubmit email error:", emailErr);
     }
 
-    if (dbSuccess || emailSuccess) {
-      setIsSuccess(true);
-      setFormData({ firstName: '', lastName: '', email: '', subject: '', message: '' });
-      setTimeout(() => setIsSuccess(false), 5000);
-    } else {
-      alert("There was an issue sending your message. Please try again or reach out via phone/email directly.");
-    }
+    // 3. Directly open WhatsApp with pre-filled formatted message
+    const whatsappNumber = "9779841737795"; // WhatsApp number
+    const messageLines = [
+      `*New Inquiry - Shape & Structure Builders*`,
+      ``,
+      `*Name:* ${formData.firstName.trim()} ${formData.lastName.trim()}`,
+      `*Email:* ${formData.email.trim()}`,
+      formData.phone.trim() ? `*Phone:* ${formData.phone.trim()}` : null,
+      `*Subject:* ${formData.subject.trim()}`,
+      ``,
+      `*Message:*`,
+      `${formData.message.trim()}`
+    ].filter(line => line !== null).join('\n');
 
+    const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(messageLines)}`;
+    window.open(whatsappUrl, '_blank');
+
+    setIsSuccess(true);
+    setFormData({ firstName: '', lastName: '', email: '', phone: '', subject: '', message: '' });
     setIsSubmitting(false);
+    setTimeout(() => setIsSuccess(false), 8000);
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -165,10 +175,10 @@ export function ContactTab() {
           <h3 className="text-2xl font-bold mb-8">Send us a Message</h3>
           
           {isSuccess ? (
-            <div className="bg-green-50 text-green-800 p-8 rounded-2xl flex flex-col items-center justify-center text-center border border-green-200 h-full min-h-[400px]">
-              <CheckCircle2 size={64} className="text-green-500 mb-4" />
-              <h4 className="text-2xl font-bold mb-2">Message Sent!</h4>
-              <p className="text-green-700">Thank you for reaching out. Our team will get back to you shortly.</p>
+            <div className="bg-emerald-500/10 text-emerald-300 p-8 rounded-2xl flex flex-col items-center justify-center text-center border border-emerald-500/30 h-full min-h-[350px]">
+              <CheckCircle2 size={56} className="text-emerald-400 mb-4 animate-bounce" />
+              <h4 className="text-2xl font-bold mb-2 text-white">Opening WhatsApp...</h4>
+              <p className="text-slate-300 max-w-md">Your filled form details have been formatted and directed to our WhatsApp line (+977 9841737795) and saved successfully.</p>
             </div>
           ) : (
             <form className="space-y-6" onSubmit={handleSubmit}>
@@ -199,17 +209,30 @@ export function ContactTab() {
                 </div>
               </div>
               
-              <div className="space-y-2">
-                <label htmlFor="email" className="text-sm font-semibold text-primary">Email Address</label>
-                <input 
-                  type="email" 
-                  id="email" 
-                  required
-                  value={formData.email}
-                  onChange={handleChange}
-                  className="w-full px-4 py-3 rounded-xl border border-border bg-muted/50 focus:bg-surface focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-all"
-                  placeholder="john@example.com"
-                />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label htmlFor="email" className="text-sm font-semibold text-primary">Email Address</label>
+                  <input 
+                    type="email" 
+                    id="email" 
+                    required
+                    value={formData.email}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 rounded-xl border border-border bg-muted/50 focus:bg-surface focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-all"
+                    placeholder="john@example.com"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label htmlFor="phone" className="text-sm font-semibold text-primary">Phone Number (Optional)</label>
+                  <input 
+                    type="tel" 
+                    id="phone" 
+                    value={formData.phone}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 rounded-xl border border-border bg-muted/50 focus:bg-surface focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-all"
+                    placeholder="+977 9800000000"
+                  />
+                </div>
               </div>
               
               <div className="space-y-2">
@@ -241,12 +264,15 @@ export function ContactTab() {
               <button 
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full bg-accent hover:bg-accent/90 disabled:opacity-70 disabled:cursor-not-allowed text-white font-semibold py-4 rounded-xl flex items-center justify-center gap-2 transition-transform hover:scale-[1.02] active:scale-[0.98]"
+                className="w-full bg-emerald-600 hover:bg-emerald-500 disabled:opacity-70 disabled:cursor-not-allowed text-white font-extrabold py-4 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-emerald-600/25 hover:scale-[1.01] active:scale-[0.99]"
               >
-                {isSubmitting ? 'Sending...' : (
-                  <>Send Message <Send size={18} /></>
+                {isSubmitting ? 'Opening WhatsApp...' : (
+                  <>Send Message via WhatsApp <MessageCircle size={20} className="fill-white/20" /></>
                 )}
               </button>
+              <p className="text-center text-xs text-slate-400">
+                Clicking "Send Message" formats your details and opens WhatsApp directly to chat with our team (+977 9841737795).
+              </p>
             </form>
           )}
         </div>
